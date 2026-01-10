@@ -339,14 +339,22 @@ export const websimSocketPolyfill = `
             if (!window._genericDB[col]) window._genericDB[col] = {};
             window._genericDB[col][key] = val;
             DevvitBridge.notifySubscribers(col);
-            fetch('/api/save', { method:'POST', body:JSON.stringify({collection:col, key, value:val})}).catch(console.error);
+            fetch('/api/save', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({collection:col, key, value:val})
+            }).catch(console.error);
         },
         get: (col, key) => window._genericDB[col]?.[key],
         getList: (col) => Object.values(window._genericDB[col] || {}),
         delete: async (col, key) => {
             if (window._genericDB[col]) delete window._genericDB[col][key];
             DevvitBridge.notifySubscribers(col);
-            fetch('/api/delete', { method:'POST', body:JSON.stringify({collection:col, key})}).catch(console.error);
+            fetch('/api/delete', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({collection:col, key})
+            }).catch(console.error);
         },
         subscribe: (col, cb) => {
             if (!window._subscribers[col]) window._subscribers[col] = [];
