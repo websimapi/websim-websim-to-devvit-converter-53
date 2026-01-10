@@ -104,7 +104,12 @@ router.get('/api/identity', async (_req, res) => {
 router.post('/api/save', async (req, res) => {
     try {
         const { collection, key, value } = req.body;
-        await redis.hSet(collection, { [key]: JSON.stringify(value) });
+        if (!collection || !key) return res.status(400).json({ error: 'Missing collection or key' });
+
+        // Ensure value is safe to stringify (undefined -> null)
+        const safeValue = value === undefined ? null : value;
+
+        await redis.hSet(collection, { [key]: JSON.stringify(safeValue) });
         await redis.zAdd(DB_REGISTRY_KEY, { member: collection, score: Date.now() });
         res.json({ success: true, collection, key });
     } catch(e) {
@@ -127,6 +132,8 @@ router.post('/api/load', async (req, res) => {
 router.post('/api/delete', async (req, res) => {
     try {
         const { collection, key } = req.body;
+        if (!collection || !key) return res.status(400).json({ error: 'Missing collection or key' });
+
         await redis.hDel(collection, [key]);
         res.json({ success: true, collection, key });
     } catch(e) {
