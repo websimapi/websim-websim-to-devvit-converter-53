@@ -154,15 +154,22 @@ router.post('/api/realtime/message', async (req, res) => {
 // --- Avatar Lookup Route (Client Injection) ---
 router.get('/api/lookup/avatar/:username', async (req, res) => {
     const { username } = req.params;
+    const defaultAvatar = 'https://www.redditstatic.com/avatars/avatar_default_02_FF4500.png';
+    
+    if (username === 'guest' || username === 'null' || !username) {
+        return res.json({ url: defaultAvatar });
+    }
+
     try {
         const user = await reddit.getUserByUsername(username);
         let url = null;
         if (user) {
             url = await user.getSnoovatarUrl();
         }
-        res.json({ url: url || 'https://www.redditstatic.com/avatars/avatar_default_02_FF4500.png' });
+        res.json({ url: url || defaultAvatar });
     } catch (e) {
-        res.json({ url: 'https://www.redditstatic.com/avatars/avatar_default_02_FF4500.png' });
+        console.warn('Avatar lookup failed for', username, e.message);
+        res.json({ url: defaultAvatar });
     }
 });
 

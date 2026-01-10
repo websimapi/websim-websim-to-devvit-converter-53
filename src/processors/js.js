@@ -14,12 +14,12 @@ export function processJS(jsContent, filename = 'script.js', analyzer) {
     }
     
     // Generic WebSim URL Replacements (Fix CSP issues & Hot-swap Identity)
-    // We replace WebSim avatar URLs with the server-side proxy "/api/proxy/avatar/username".
-    // This ensures new Image().src works immediately without needing DOM injection, preventing game loader hangs.
-    code = code.replace(/https:\/\/images\.websim\.ai\/avatar\/|https:\/\/images\.websim\.com\/avatar\//g, '/api/proxy/avatar/');
+    // We replace WebSim avatar URLs with the placeholder "/_websim_avatar_/username".
+    // This allows the client-side injector to fetch the real URL via API and handle fallbacks/transitions.
+    code = code.replace(/https:\/\/images\.websim\.ai\/avatar\/|https:\/\/images\.websim\.com\/avatar\//g, '/_websim_avatar_/');
     
     // Replace full literal avatar strings if found (e.g. "https://.../avatar/someuser")
-    code = code.replace(/["']https:\/\/images\.websim\.(ai|com)\/avatar\/([^"']+)["']/g, '"/api/proxy/avatar/$2"');
+    code = code.replace(/["']https:\/\/images\.websim\.(ai|com)\/avatar\/([^"']+)["']/g, '"/_websim_avatar_/$2"');
 
     // Calculate relative path to root for asset corrections
     const depth = (filename.match(/\//g) || []).length;
@@ -91,8 +91,8 @@ export function processJS(jsContent, filename = 'script.js', analyzer) {
                         const expr = node.expressions[0];
                         if (expr.type === 'MemberExpression' && expr.property.type === 'Identifier' && expr.property.name === 'username') {
                             const objectCode = code.slice(expr.object.start, expr.object.end);
-                            // Prefer cached avatar_url, fallback to server proxy which handles 302 redirect for immediate loading
-                            const replacement = `(${objectCode}.avatar_url || "/api/proxy/avatar/" + ${objectCode}.username)`;
+                            // Prefer cached avatar_url, fallback to injector placeholder
+                            const replacement = `(${objectCode}.avatar_url || "/_websim_avatar_/" + ${objectCode}.username)`;
                             magic.overwrite(node.start, node.end, replacement);
                             hasChanges = true;
                         }
@@ -114,7 +114,7 @@ export function processJS(jsContent, filename = 'script.js', analyzer) {
                         if (isWebSim || isPlaceholder) {
                             if (right.type === 'MemberExpression' && right.property.type === 'Identifier' && right.property.name === 'username') {
                                 const objectCode = code.slice(right.object.start, right.object.end);
-                                const replacement = `(${objectCode}.avatar_url || "/api/proxy/avatar/" + ${objectCode}.username)`;
+                                const replacement = `(${objectCode}.avatar_url || "/_websim_avatar_/" + ${objectCode}.username)`;
                                 magic.overwrite(node.start, node.end, replacement);
                                 hasChanges = true;
                             }

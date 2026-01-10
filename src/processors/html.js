@@ -128,8 +128,8 @@ export function processHTML(htmlContent, filename, analyzer) {
     html = html.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
 
     // 5. Replace WebSim Avatar URLs in HTML attributes
-    // Replaces https://images.websim.ai/avatar/username with /api/proxy/avatar/username
-    html = html.replace(/https:\/\/images\.websim\.(?:ai|com)\/avatar\/([^"'\s]+)/g, '/api/proxy/avatar/$1');
+    // Replaces https://images.websim.ai/avatar/username with /_websim_avatar_/username (triggering client-side injector)
+    html = html.replace(/https:\/\/images\.websim\.(?:ai|com)\/avatar\/([^"'\s]+)/g, '/_websim_avatar_/$1');
 
     return { html, extractedScripts };
 }

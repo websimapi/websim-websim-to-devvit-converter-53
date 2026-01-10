@@ -120,7 +120,8 @@ export const avatarInjector = `
             const parts = src.split(PLACEHOLDER_PREFIX);
             if (parts.length > 1) {
                 // Remove any trailing query params or hashes
-                const username = parts[1].split(/[?#]/)[0];
+                let username = parts[1].split(/[?#]/)[0];
+                if (username === 'null' || username === 'undefined') username = 'guest';
                 resolve(username, node);
             }
         }
